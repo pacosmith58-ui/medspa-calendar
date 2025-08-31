@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Your Appointment</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #2c3e50, #34495e);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            opacity: 0.8;
+            font-size: 14px;
+        }
+
+        .calendar-container {
+            padding: 20px;
+        }
+
+        .calendar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .month-nav {
+            background: none;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 10px;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+
+        .month-nav:hover {
+            background: #f0f0f0;
+        }
+
+        .month-year {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 2px;
+            margin-bottom: 20px;
+        }
+
+        .day-header {
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: #7f8c8d;
+            padding: 10px 0;
+        }
+
+        .day-cell {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .day-cell.other-month {
+            color: #bdc3c7;
+        }
+
+        .day-cell.available {
+            background: #e8f5e8;
+            color: #27ae60;
+            border: 2px solid #27ae60;
+        }
+
+        .day-cell.available:hover {
+            background: #27ae60;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .day-cell.unavailable {
+            color: #bdc3c7;
+            background: #f8f9fa;
+        }
+
+        .day-cell.selected {
+            background: #3498db;
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .day-cell.today {
+            border: 2px solid #3498db;
+        }
+
+        .time-slots {
+            display: none;
+            animation: slideIn 0.3s ease;
+        }
+
+        .time-slots.show {
+            display: block;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .time-slots h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+
+        .time-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .time-slot {
+            padding: 12px;
+            background: #ecf0f1;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+
+        .time-slot:hover {
+            background: #3498db;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        .time-slot.selected {
+            background: #27ae60;
+            color: white;
+            border-color: #219a52;
+        }
+
+        .time-slot.unavailable {
+            background: #f8f9fa;
+            color: #bdc3c7;
+            cursor: not-allowed;
+        }
+
+        .selected-info {
+            display: none;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .selected-info.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        .selected-info h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .selected-info p {
+            color: #7f8c8d;
+            font-size: 14px;
+            margin-bottom: 5px;
+        }
+
+        .confirm-btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: none;
+        }
+
+        .confirm-btn.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        .confirm-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(46, 204, 113, 0.3);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #7f8c8d;
+        }
+
+        .provider-info {
+            background: #e3f2fd;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 14px;
+            color: #1976d2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Book Your Appointment</h1>
+            <p>Select your preferred date and time</p>
+        </div>
+
+        <div class="calendar-container">
+            <!-- Calendar Instructions -->
+            <div class="provider-info" id="treatmentInfo">
+                Available dates highlighted in green
+            </div>
+
+            <!-- Calendar -->
+            <div class="calendar-header">
+                <button class="month-nav" onclick="previousMonth()">‹</button>
+                <div class="month-year" id="monthYear">September 2025</div>
+                <button class="month-nav" onclick="nextMonth()">›</button>
+            </div>
+
+            <div class="calendar-grid" id="calendarGrid">
+                <!-- Calendar will be generated here -->
+            </div>
+
+            <!-- Time Slots -->
+            <div class="time-slots" id="timeSlots">
+                <h3>Available Times</h3>
+                <div class="time-grid" id="timeGrid">
+                    <!-- Time slots will be generated here -->
+                </div>
+                <p style="font-size: 12px; color: #7f8c8d; text-align: center; margin-top: 15px;">
+                    To book more than 2 months in advance, please call the clinic directly
+                </p>
+            </div>
+
+            <!-- Selected Appointment Info -->
+            <div class="selected-info" id="selectedInfo">
+                <h4>Your Selection</h4>
+                <p><strong>Treatment:</strong> Botox - 2 Areas</p>
+                <p><strong>Provider:</strong> Dr. Sarah Martinez</p>
+                <p><strong>Date:</strong> <span id="selectedDate"></span></p>
+                <p><strong>Time:</strong> <span id="selectedTime"></span></p>
+                <p><strong>Duration:</strong> 45 minutes</p>
+                <p><strong>Price:</strong> $400</p>
+            </div>
+
+            <button class="confirm-btn" id="confirmBtn" onclick="confirmBooking()">
+                Confirm Booking
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Mock data - expanded for September 20+ and October/November
+        const mockAvailability = {
+            // Late September (starting Sept 20)
+            '2025-09-20': ['10:00 AM', '11:00 AM', '2:00 PM'],
+            '2025-09-23': ['9:00 AM', '10:00 AM', '1:00 PM', '3:00 PM'],
+            '2025-09-24': ['11:00 AM', '2:00 PM', '4:00 PM'],
+            '2025-09-26': ['10:00 AM', '1:00 PM', '3:00 PM'],
+            '2025-09-27': ['9:00 AM', '11:00 AM', '2:00 PM', '4:00 PM'],
+            '2025-09-30': ['10:00 AM', '2:00 PM', '3:00 PM'],
+            
+            // October - plenty of availability
+            '2025-10-01': ['9:00 AM', '10:00 AM', '11:00 AM', '2:00 PM', '3:00 PM'],
+            '2025-10-02': ['10:00 AM', '11:00 AM', '1:00 PM', '2:00 PM', '4:00 PM'],
+            '2025-10-04': ['9:00 AM', '10:00 AM', '2:00 PM', '3:00 PM'],
+            '2025-10-07': ['10:00 AM', '11:00 AM', '1:00 PM', '3:00 PM', '4:00 PM'],
+            '2025-10-08': ['9:00 AM', '11:00 AM', '2:00 PM'],
+            '2025-10-09': ['10:00 AM', '1:00 PM', '2:00 PM', '3:00 PM'],
+            '2025-10-11': ['9:00 AM', '10:00 AM', '11:00 AM', '2:00 PM', '4:00 PM'],
+            '2025-10-14': ['10:00 AM', '1:00 PM', '3:00 PM', '4:00 PM'],
+            '2025-10-15': ['9:00 AM', '11:00 AM', '2:00 PM', '3:00 PM'],
+            '2025-10-16': ['10:00 AM', '11:00 AM', '1:00 PM', '2:00 PM'],
+            '2025-10-18': ['9:00 AM', '10:00 AM', '2:00 PM', '3:00 PM', '4:00 PM'],
+            '2025-10-21': ['10:00 AM', '11:00 AM', '3:00 PM'],
+            '2025-10-22': ['9:00 AM', '1:00 PM', '2:00 PM', '4:00 PM'],
+            '2025-10-23': ['10:00 AM', '11:00 AM', '2:00 PM', '3:00 PM'],
+            '2025-10-25': ['9:00 AM', '10:00 AM', '1:00 PM', '3:00 PM'],
+            '2025-10-28': ['10:00 AM', '11:00 AM', '2:00 PM', '4:00 PM'],
+            '2025-10-29': ['9:00 AM', '1:00 PM', '2:00 PM', '3:00 PM'],
+            '2025-10-30': ['10:00 AM', '11:00 AM', '3:00 PM', '4:00 PM'],
+            
+            // Early November (up to Nov 20)
+            '2025-11-01': ['9:00 AM', '10:00 AM', '2:00 PM', '3:00 PM'],
+            '2025-11-04': ['10:00 AM', '11:00 AM', '1:00 PM', '4:00 PM'],
+            '2025-11-05': ['9:00 AM', '2:00 PM', '3:00 PM'],
+            '2025-11-06': ['10:00 AM', '11:00 AM', '2:00 PM'],
+            '2025-11-08': ['9:00 AM', '1:00 PM', '3:00 PM', '4:00 PM'],
+            '2025-11-11': ['10:00 AM', '11:00 AM', '2:00 PM', '3:00 PM'],
+            '2025-11-12': ['9:00 AM', '10:00 AM', '1:00 PM'],
+            '2025-11-13': ['11:00 AM', '2:00 PM', '3:00 PM', '4:00 PM'],
+            '2025-11-15': ['9:00 AM', '10:00 AM', '2:00 PM'],
+            '2025-11-18': ['10:00 AM', '11:00 AM', '1:00 PM', '3:00 PM'],
+            '2025-11-19': ['9:00 AM', '2:00 PM', '4:00 PM'],
+            '2025-11-20': ['10:00 AM', '11:00 AM', '3:00 PM']
+        };
+
+        let currentDate = new Date(2025, 8, 1); // September 2025
+        let selectedDate = null;
+        let selectedTime = null;
+
+        const months = [
+            'January', 'February', 'March', 'April', 'May', 'June',
+            'July', 'August', 'September', 'October', 'November', 'December'
+        ];
+
+        const dayHeaders = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+        function generateCalendar() {
+            const monthYear = document.getElementById('monthYear');
+            const calendarGrid = document.getElementById('calendarGrid');
+            
+            monthYear.textContent = `${months[currentDate.getMonth()]} ${currentDate.getFullYear()}`;
+            
+            // Clear previous calendar
+            calendarGrid.innerHTML = '';
+            
+            // Add day headers
+            dayHeaders.forEach(day => {
+                const dayHeader = document.createElement('div');
+                dayHeader.className = 'day-header';
+                dayHeader.textContent = day;
+                calendarGrid.appendChild(dayHeader);
+            });
+            
+            // Get first day of month and number of days
+            const firstDay = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+            const lastDay = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+            const firstDayOfWeek = firstDay.getDay();
+            const daysInMonth = lastDay.getDate();
+            
+            // Add empty cells for days before month starts
+            for (let i = 0; i < firstDayOfWeek; i++) {
+                const emptyDay = document.createElement('div');
+                emptyDay.className = 'day-cell other-month';
+                calendarGrid.appendChild(emptyDay);
+            }
+            
+            // Add days of the month
+            const today = new Date();
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayCell = document.createElement('div');
+                dayCell.className = 'day-cell';
+                dayCell.textContent = day;
+                
+                const cellDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+                const dateString = cellDate.toISOString().split('T')[0];
+                
+                // Check if today
+                if (cellDate.toDateString() === today.toDateString()) {
+                    dayCell.classList.add('today');
+                }
+                
+                // Check availability
+                if (mockAvailability[dateString] && cellDate >= today) {
+                    dayCell.classList.add('available');
+                    dayCell.onclick = () => selectDate(dateString, day);
+                } else if (cellDate >= today) {
+                    dayCell.classList.add('unavailable');
+                } else {
+                    dayCell.classList.add('unavailable');
+                }
+                
+                calendarGrid.appendChild(dayCell);
+            }
+        }
+
+        function selectDate(dateString, day) {
+            // Remove previous selection
+            document.querySelectorAll('.day-cell.selected').forEach(cell => {
+                cell.classList.remove('selected');
+            });
+            
+            // Add selection to clicked day
+            event.target.classList.add('selected');
+            
+            selectedDate = dateString;
+            selectedTime = null;
+            
+            // Show time slots
+            showTimeSlots(dateString);
+            
+            // Hide previous selections
+            document.getElementById('selectedInfo').classList.remove('show');
+            document.getElementById('confirmBtn').classList.remove('show');
+        }
+
+        function showTimeSlots(dateString) {
+            const timeSlots = document.getElementById('timeSlots');
+            const timeGrid = document.getElementById('timeGrid');
+            
+            timeGrid.innerHTML = '';
+            
+            const availableTimes = mockAvailability[dateString] || [];
+            
+            availableTimes.forEach(time => {
+                const timeSlot = document.createElement('div');
+                timeSlot.className = 'time-slot';
+                timeSlot.textContent = time;
+                timeSlot.onclick = () => selectTime(time, timeSlot);
+                timeGrid.appendChild(timeSlot);
+            });
+            
+            timeSlots.classList.add('show');
+        }
+
+        function selectTime(time, element) {
+            // Remove previous time selection
+            document.querySelectorAll('.time-slot.selected').forEach(slot => {
+                slot.classList.remove('selected');
+            });
+            
+            // Select current time
+            element.classList.add('selected');
+            selectedTime = time;
+            
+            // Update selected info
+            const selectedDateFormatted = new Date(selectedDate).toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            document.getElementById('selectedDate').textContent = selectedDateFormatted;
+            document.getElementById('selectedTime').textContent = time;
+            
+            // Show confirmation
+            document.getElementById('selectedInfo').classList.add('show');
+            document.getElementById('confirmBtn').classList.add('show');
+        }
+
+        function previousMonth() {
+            currentDate.setMonth(currentDate.getMonth() - 1);
+            generateCalendar();
+            hideTimeSlots();
+        }
+
+        function nextMonth() {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+            generateCalendar();
+            hideTimeSlots();
+        }
+
+        function hideTimeSlots() {
+            document.getElementById('timeSlots').classList.remove('show');
+            document.getElementById('selectedInfo').classList.remove('show');
+            document.getElementById('confirmBtn').classList.remove('show');
+            selectedDate = null;
+            selectedTime = null;
+        }
+
+        function confirmBooking() {
+            const bookingData = {
+                date: selectedDate,
+                time: selectedTime,
+                treatment: 'Botox - 2 Areas',
+                provider: 'Dr. Sarah Martinez',
+                duration: '45 minutes',
+                price: '$400'
+            };
+            
+            // This would communicate back to ManyChat
+            // For now, just show an alert
+            alert(`Booking confirmed!\n\nDate: ${new Date(selectedDate).toLocaleDateString()}\nTime: ${selectedTime}\n\nReturning to chat...`);
+            
+            // In real implementation, this would send data back to ManyChat
+            // and close the web view
+            // Example: window.parent.postMessage(bookingData, '*');
+        }
+
+        // Initialize calendar on load
+        generateCalendar();
+    </script>
+</body>
+</html>
